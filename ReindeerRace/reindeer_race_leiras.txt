@@ -1,0 +1,142 @@
+Idén rendezik a Rénszarvas Olimpiát! A rénszarvasok nagyon gyorsan képesek repülni, de néha meg kell állniuk pihenni. A Mikulás szeretné tudni, melyik a leggyorsabb, ezért versenyt rendez. 
+A rénszarvasok vagy teljes sebességgel repülnek, vagy teljesen megállnak, és pihennek. A rénszarvasok különböző sebességekkel képesek repülni különböző ideig, de aztán meg kell állniuk pihenni. A pihenés időtartama is rénszarvasonként változik. A szarvasok adatait a megadott day14_input.txt szövegfájl tartalmazza.
+1. Kérdés: 2503 másodperc után hány km távolságig jut el a leggyorsabb rénszarvas?
+2. Kérdés: A Mikulás elégedetlen az eredménnyel, ezért változtat a szabályokon. Pontozásos rendszert alakít ki: minden egyes másodpercben az éppen vezető rénszarvas kap egy pontot. Holtverseny esetén mindenki kap egy-egy pontot.  A kérdés hogy kinek lesz a legtöbb pontja pontosan 2503 másodperc után? (Mivel minden más időtartam esetén az egész verseny teljesen értelmetlen lenne.)
+
+A megvalósításhoz a Java nyelvet használtam. Az ötlet az volt, hogy leszimulálom a versenyt, így közben még szurkolni is lehet a kedvenc rénszarvasunknak. 
+Gondolkodjunk objektumorientáltan: kezdetnek készítsünk el a Reindeer osztályt, aminek példányai  lesznek majd az egyes rénszarvasok. Minden rénszarvasnak van tehát legalább 4 rá jellemző tulajdonsága: név, sebesség, repülési idő, és pihenőidő. Ezen kívül minden szarvas két állapotban lehet: repül és pihen.  Ezen kívül célszerű lenne ismerni a szarvas által megtett utat, tehát ezt is felvehetjük tulajdonságnak. 
+
+public class Reindeer 
+{
+	private int speed, flyTime, maxFlyTime, restTime, maxRestTime, distance;
+	private String name;
+
+	public Reindeer(String name, int speed, int maxFlyTime, int maxRestTime)
+	{
+		this.speed = speed;
+		this.maxFlyTime = this.flyTime = maxFlyTime;
+		this.maxRestTime = maxRestTime;
+		this.distance = 0;
+		this.restTime = 0;
+		this.name = name;
+	}
+}
+
+A fenti kódrészletben a maxFlyTime jelenti azt az időt, amit egyhuzamban repülni képes a rénszarvas. Hasonlóan a maxRestTime pedig azt az időt, amennyit pihennie kell. Ezeket kell paraméterként megadni. A flyTime és restTime változókat azért vettem fel, hogy jelezze, hogy az adott másodpercben milyen állapotban van a rénszarvas: Hány másodperce pihen, illetve mennyit tud még repülni. Vagyis ezek minden másodpercben változnak, míg a maxFlyTime és maxRestTime az állatra jellemző tulajdonságok, állandók. Kezdetben mindegyikük kipihent, tehát az indulás időpillanatában mindegyik annyit repül, amennyit tud (tehát maxFlyTime). Pihenni pedig egyiknek sem kell, ezért az 0. 
+
+A rénszarvasok reptetéséhez szükségük van egy metódusra, amit meghívva repülhetnek az állatok. Ez a lenti kódban a doAction, ami két dolgot tehet. Ha bírnak még futni (flyTime>0), akkor növeli a megtett távolságot (distance), egyébként pihen, amennyit kell. Repülés közben csökken a még egyhuzamban repülhető idő (flyTime), pihenés közben pedig nő a pihenéssel töltött idő (restTime).
+
+public class Reindeer 
+{
+	private int speed, flyTime, maxFlyTime, restTime, maxRestTime, distance;
+	private String name;
+	
+	public Reindeer(String name, int speed, int maxFlyTime, int maxRestTime)
+	{
+		this.speed = speed;
+		this.maxFlyTime = this.flyTime = maxFlyTime;
+		this.maxRestTime = maxRestTime;
+		this.distance = 0;
+		this.restTime = 0;
+		this.name = name;
+	}
+	
+	public int getDistance()
+	{
+		return this.distance;
+	}
+	public String getName()
+	{
+		return this.name;
+	}
+	
+	public void doAction()
+	{
+		if (flyTime > 0)
+		{
+			System.out.println("Running! Current distance: "+distance+" km");
+			distance+=speed;
+			--flyTime;
+			if (flyTime==0) //if finish flying, starting to rest
+				restTime = 0;
+		}
+		else 
+		{
+			System.out.println("Resting..."+(maxRestTime-restTime)+" seconds remaining");
+			++restTime;
+			if (restTime == maxRestTime)
+				flyTime = maxFlyTime;
+		}
+	}
+	
+	public String toString()
+	{
+		String back = "Name: "+name+" is in "+distance+" km (speed: "+speed+" km/s for "+maxFlyTime+" s, then rest "+maxRestTime+" s)\n";
+		return back;
+	}
+}
+
+Miután ez elkészült, elkezdhetjük a fő program megírását. Ehhez először is a bemeneti fájlt kell feldolgozni, és "kiszedni" belőle az információkat. Soronkénti beolvasással, szóközönkénti tördeléssel, illetve String egész számmá alakításával könnyen megoldható. Ha megvannak az adatok, példányosíthatjuk a szarvasokat. Ezután nincs más dolgunk, mint 2503-szor lefuttatni minden rénszarvas doAction metódusát, majd megvizsgálni, hogy kinek a távolsága a legnagyobb. Valahogy így:
+
+import java.io.*;
+import java.util.*;
+
+public class ReindeerRace 
+{
+	public static ArrayList<Reindeer> Reindeers = new ArrayList<Reindeer>();
+	
+	public static void main (String[] args)
+	{
+		try 
+		{
+			String fileName = "input14_reindeers.txt";
+			getReindeersFromFile(fileName);
+			for (int time=1; time<=2503; ++time)
+			{
+				for (int i=0; i<Reindeers.size(); ++i)
+				{
+					Reindeers.get(i).doAction();
+				}
+			}
+			//Print the final distances
+			System.out.println(Reindeers);
+			
+		}
+		catch (Exception ex) 
+		{
+			System.out.println("Fatal error: "+ex);
+			ex.printStackTrace();
+		}
+	}
+	
+	public static void getReindeersFromFile(String fileName) throws Exception
+	{
+		BufferedReader reader = new BufferedReader(new FileReader(fileName));
+		String line = reader.readLine();
+		while (line!=null)
+		{
+			String[] arr = line.split(" ");
+			String name = arr[0];
+			int speed = Integer.parseInt(arr[3]);
+			int maxFlyTime = Integer.parseInt(arr[6]);
+			int maxRestTime = Integer.parseInt(arr[13]);
+			Reindeer deer = new Reindeer(name, speed, maxFlyTime, maxRestTime);
+			Reindeers.add(deer);
+			line = reader.readLine();
+		}
+		reader.close();
+	}
+}
+
+A futtatásról annyit kell tudni, hogy mindkét állományt  le kell fordítani, de csak a ReindeerRace osztályt lehet futtatni, ugyanis csak annak van main metódusa. A Reindeer osztályt csak felhasználja fő program. Ha fordítás után mappában van a Reindeer.class és a ReindeerRace.class (és persze a bemeti fájl, a day14_input.txt), akkor a ReindeerRace-t futtatva működik a program. Vagyis:
+
+# javac Reindeer.java
+# javac ReindeerRace.java
+# java ReindeerRace
+
+Persze aki valami integrált fejlesztőeszközt (IDE: Pl.: Eclipse, NetBeans) használ, annál csak arra kell figyelni, hogy egy Projecten belül legyenek a fájlok. De én most megmutattam az IDÉtlen változatot is.
+
+A második feladat esetében minden szarvast pontos a Mikulás. Ehhez egy táblázatot használ, ahol mind a 8 szarvas nevéhez odaírja az aktuális pontszámát. Ezt a programban egy Hashtable objektummal oldottam meg, aminek kulcsai a rénszarvasok neve, értékei pedig az aktuális pontszámok. A feladat annyi, hogy minden másodpercben (time ciklus) megkeressük az éppen vezető szarvas(ok) nevét (getLeadersName), és növeljük a vezető(k) pontszámának értékét a ReindeerScore táblázatban.  
+Az első és második rész összevont kódja: elérhető a Pastebinen.
+
+Aki pedig eddig kitartott, az megnézheti a Rénszarvas Olimpia Javascriptben, HTML canvason szimulált változatát. A működési elve hasonló, csak  a rajzolás benne a plusz, de pont ettől sokkal látványosabb:
