@@ -4,7 +4,7 @@ Santa has become stranded at the edge of the Solar System while delivering prese
 
 My Advent of Code 2016 challenge solutions:
 
-* [Day 1: The Tyranny of the Rocket Equation] (https://github.com/strahlistvan/adventofcode2016/tree/master/day1) - Python
-* [Day 2: 1202 Program Alarm] (https://github.com/strahlistvan/adventofcode2016/tree/master/day2) - Python
-* [Day 3: Crossed Wires] (https://github.com/strahlistvan/adventofcode2016/tree/master/day3) - Python
-* [Day 4: Secure Container] (https://github.com/strahlistvan/adventofcode2016/tree/master/day4) - Python
+* [Day 1: The Tyranny of the Rocket Equation](https://github.com/strahlistvan/adventofcode/tree/master/adventofcode2019/day01) - Python
+* [Day 2: 1202 Program Alarm](https://github.com/strahlistvan/adventofcode/tree/master/adventofcode2019/day02) - Python
+* [Day 3: Crossed Wires](https://github.com/strahlistvan/adventofcode/tree/master/adventofcode2019/day03) - Python
+* [Day 4: Secure Container](https://github.com/strahlistvan/adventofcode/tree/master/adventofcode2019/day04) - Python
