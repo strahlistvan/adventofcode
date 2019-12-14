@@ -16,6 +16,7 @@ for line in input:
     input_list.append([ch for ch in line])
 print(input_list)
 
+#Fill coordinate list by "asteroid map"
 asteroids = []
 for x in range(len(input_list)):
     for y in range(len(input_list[x])):
@@ -23,20 +24,17 @@ for x in range(len(input_list)):
             asteroids.append({'x': x, 'y': y})
 
 max_detectable_count = 0
-for i in range(len(asteroids)):
-    candidate = asteroids[i]
+for candidate in asteroids:
     asteroid_detect_list = []
-    for j in range(len(asteroids)):
-        other = asteroids[j]
+    for other in asteroids:
         if candidate == other:
             continue
-
         other['dy'] = candidate['y']-other['y']
         other['dx'] = candidate['x']-other['x']
         other['angle'] = round(math.atan2(other['dy'], other['dx']), 4)
         other['dist'] = round(math.sqrt(other['dx']**2 + other['dy']**2), 4)
         asteroid_detect_list.append(other)
-
+    #Detectable asteroids = distinct angles count
     detectable_count = len(set([x['angle'] for x in asteroid_detect_list]))
     print(detectable_count)
     if detectable_count > max_detectable_count:
