@@ -28,10 +28,12 @@ class Line:
             return 'horizontal'
         return 'invalid'
 
-    def sort_points(self):
+    def set_lower_upper(self):
         if (self.point1['x'] > self.point2['x']) \
         or (self.point1['y'] > self.point2['y']):
-            self.point1, self.point2 = self.point2, self.point1
+            self.lower, self.upper = self.point2, self.point1
+        else:
+            self.lower, self.upper = self.point1, self.point2
 
 def get_wire(path):
     path = path.split(',')
@@ -54,77 +56,64 @@ def get_wire(path):
     return wire
 
 def get_intersect(line1, line2):
-    line1.sort_points()
-    line2.sort_points()
-    if (line2.point1['x'] < line1.point1['x'] < line2.point2['x']) \
-    and (line1.point1['y'] < line2.point1['y'] < line1.point2['y']):
-        return {'x': line1.point1['x'], 'y': line2.point1['y']}
-    if (line1.point1['x'] < line2.point1['x'] < line1.point2['x']) \
-    and (line2.point1['y'] < line1.point1['y'] < line2.point2['y']):
-        return {'x': line2.point1['x'], 'y': line1.point1['y']}
+    line1.set_lower_upper()
+    line2.set_lower_upper()
+    if (line2.lower['x'] < line1.lower['x'] < line2.upper['x']) \
+    and (line1.lower['y'] < line2.lower['y'] < line1.upper['y']):
+        return {'x': line1.lower['x'], 'y': line2.lower['y']}
+    if (line1.lower['x'] < line2.lower['x'] < line1.upper['x']) \
+    and (line2.lower['y'] < line1.lower['y'] < line2.upper['y']):
+        return {'x': line2.lower['x'], 'y': line1.upper['y']}
 
-fp = open('day03_input.txt')
-
-path1 = fp.readline()
-wire1 =get_wire(path1)
-
-path2 = fp.readline()
-wire2 =get_wire(path2)
-
-fp.close()
+with open('day03_input.txt') as fp:
+    path1 = fp.readline()
+    wire1 =get_wire(path1)
+    path2 = fp.readline()
+    wire2 =get_wire(path2)
 
 def origo_distance(obj):
     return abs(obj['x']) + abs(obj['y'])
 
-def distance(a, b):
-    return abs(a['x']-b['x']) + abs(a['y']-b['y'])
+def get_intersects(wire1, wire2):
+    intersects = []
+    for line1 in wire1:
+        for line2 in wire2:
+            if get_intersect(line1, line2) != None:
+                intersects.append(get_intersect(line1, line2))
+    return intersects
 
 #part one
-intersects = []
-for line1 in wire1:
-    for line2 in wire2:
-        if get_intersect(line1, line2) != None:
-            intersects.append(get_intersect(line1, line2))
+intersects = get_intersects(wire1, wire2)
 
 min_intersection = min(intersects, key=origo_distance)
 print(min_intersection)
-print('Min intesection distance from origin: {}'\
+print('Min intesection distance from central port (origin): {}'\
       .format(origo_distance(min_intersection)))
 
-#part two
-fp = open('day03_input.txt')
+#part two -Find wire intersection with minimal total steps
+def calc_steps_in_wire(wire, isect):
+    steps = 0
+    for line in wire:
+        if isect['x'] == line.point1['x'] \
+        and ( line.point1['y'] < isect['y'] < line.point2['y'] \
+             or line.point2['y'] < isect['y'] < line.point1['y'] ) :
+            steps += abs(isect['y'] - line.point1['y'])
+            break
+        elif isect['y'] == line.point1['y'] \
+        and ( line.point1['x'] < isect['x'] < line.point2['x']
+             or line.point2['x'] < isect['x'] < line.point1['x'] ):
+            steps += abs(isect['x'] - line.point1['x'] )
+            break
+        elif line.point1['x'] == line.point2['x']:
+            steps += abs(line.point2['y'] - line.point1['y'])
+        else:
+            steps += abs(line.point2['x'] - line.point1['x'])
+    return steps
 
-path1 = 'R8,U5,L5,D3'
-wire1 =get_wire(path1)
+all_steps = []
+for isect in intersects:
+    steps1 = calc_steps_in_wire(wire1, isect)
+    steps2 = calc_steps_in_wire(wire2, isect)
+    all_steps.append(steps1 + steps2)
 
-path2 = 'U7,R6,D4,L4'
-wire2 =get_wire(path2)
-
-print(wire1)
-print(wire2)
-total_steps1 = 0
-
-for idx in range(len(wire1)):
-    if wire1[idx].point1['x'] == min_intersection['x'] \
-    and wire1[idx].point1['y'] <= min_intersection['y'] <=  wire1[idx].point2['y']:
-        total_steps1 += distance(wire1[idx].point1, min_intersection)
-        break
-    if wire1[idx].point1['y'] == min_intersection['y'] \
-    and wire1[idx].point1['x'] <= min_intersection['x'] <=  wire1[idx].point2['x']:
-        total_steps1 += distance(wire1[idx].point1, min_intersection)
-        break
-    total_steps1 += distance(wire1[idx].point1, wire1[idx].point2)
-print(total_steps1)
-
-total_steps2 = 0
-for idx in range(len(wire1)):
-    if wire2[idx].point1['x'] == min_intersection['x'] \
-    and wire2[idx].point1['y'] <= min_intersection['y'] <=  wire2[idx].point2['y']:
-        total_steps2 += distance(wire2[idx].point1, min_intersection)
-        break
-    if wire2[idx].point1['y'] == min_intersection['y'] \
-    and wire2[idx].point1['x'] <= min_intersection['x'] <=  wire2[idx].point2['x']:
-        total_steps2 += distance(wire2[idx].point1, min_intersection)
-        break
-    total_steps2 += distance(wire1[idx].point1, wire1[idx].point2)
-print(total_steps2)
+print('Intersection with fewest total steps in wires from the central port: {}'.format(min(all_steps)))
